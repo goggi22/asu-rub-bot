@@ -1,4 +1,5 @@
 import { fetch } from 'sdk';
+import { neko } from './emoji.js';
 
 const API = 'https://asu.rub22.ru';
 const TZ = 7 * 3600 * 1000; // Барнаул/Рубцовск UTC+7
@@ -79,12 +80,14 @@ function esc(s) {
   return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
+export { esc };
+
 export function richDay(day, opts = {}) {
   const parts = [];
   const title = `${day.weekday}, ${prettyDate(day.date)}`;
   if (!day.lessons.length) {
     parts.push(`<h3>${esc(title)}</h3>`);
-    parts.push(`<p>😩 Пар нет — свободен</p>`);
+    parts.push(`<p>${neko('😴')} Пар нет — свободен</p>`);
     return parts.join('');
   }
   if (opts.compact) {
@@ -119,7 +122,7 @@ export function richDays(days, title, opts = {}) {
   const parts = [`<h2>${esc(title)}</h2>`];
   const shown = opts.onlyWithLessons ? days.filter(d => d.lessons.length) : days;
   for (const d of shown) parts.push(richDay(d, opts));
-  if (!shown.length) parts.push('<p>На этой неделе пар нет 🎉</p>');
+  if (!shown.length) parts.push(`<p>На этой неделе пар нет ${neko('🎉')}</p>`);
   return parts.join('<hr/>');
 }
 
@@ -155,7 +158,7 @@ export function escapeHtml(s) {
 export function formatDay(day) {
   const lines = [`\n📅 <b>${day.weekday}, ${prettyDate(day.date)}</b>`];
   if (!day.lessons.length) {
-    lines.push('😩 пар нет — свободен');
+    lines.push(`${neko('😴')} пар нет — свободен`);
     return lines.join('\n');
   }
   for (const l of day.lessons) {
