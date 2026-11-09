@@ -111,7 +111,7 @@ async function searchGroups(chatId, query) {
   const q = query.trim().toLowerCase().replace(/\s+/g, '');
   const found = q
     ? groups.filter(g => g.name.toLowerCase().replace(/\s+/g, '').includes(q))
-    : groups.slice(0, 12);
+    : groups;
 
   if (found.length === 0) {
     return api.sendMessage({
