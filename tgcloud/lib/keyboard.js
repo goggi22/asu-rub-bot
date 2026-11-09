@@ -1,15 +1,17 @@
 // нативные rich-кнопки (<tg-button>) прямо в теле сообщения
 
+import { neko } from './emoji.js';
+
 export function scheduleButtonsHtml(notifyOn = true) {
   return [
     '<tg-button-row align="center">',
-    '  <tg-button type="callback_data" style="primary" data="day:today">📅 Сегодня</tg-button>',
-    '  <tg-button type="callback_data" data="day:tomorrow">⏭ Завтра</tg-button>',
-    '  <tg-button type="callback_data" data="day:week">🗓 Неделя</tg-button>',
+    `  <tg-button type="callback_data" style="primary" data="day:today">${neko('🐾')} Сегодня</tg-button>`,
+    `  <tg-button type="callback_data" data="day:tomorrow">${neko('✨')} Завтра</tg-button>`,
+    `  <tg-button type="callback_data" data="day:week">${neko('🔥')} Неделя</tg-button>`,
     '</tg-button-row>',
     '<tg-button-row align="center">',
-    '  <tg-button type="callback_data" data="act:reset">🔄 Сменить группу</tg-button>',
-    `  <tg-button type="callback_data" style="${notifyOn ? 'success' : 'danger'}" data="act:notify">${notifyOn ? '🔔' : '🔕'} Напоминания: ${notifyOn ? 'вкл' : 'выкл'}</tg-button>`,
+    `  <tg-button type="callback_data" data="act:reset">${neko('🏃‍♂️')} Сменить группу</tg-button>`,
+    `  <tg-button type="callback_data" style="${notifyOn ? 'success' : 'danger'}" data="act:notify">${notifyOn ? neko('⚡️') : neko('😴')} Напоминания: ${notifyOn ? 'вкл' : 'выкл'}</tg-button>`,
     '</tg-button-row>',
   ].join('');
 }
