@@ -16,9 +16,9 @@ export default async function (query) {
       await api.answerCallbackQuery({ callback_query_id: query.id });
       const [, pageRaw, ...rest] = data.split(':');
       const page = Math.max(0, parseInt(pageRaw, 10) || 0);
-      const query = rest.join(':');
+      const searchQ = rest.join(':');
       const groups = await getGroups();
-      const q = query.trim().toLowerCase().replace(/\s+/g, '');
+      const q = searchQ.trim().toLowerCase().replace(/\s+/g, '');
       const found = q
         ? groups.filter(g => g.name.toLowerCase().replace(/\s+/g, '').includes(q))
         : groups;
