@@ -11,6 +11,23 @@ export default async function (query) {
   const data = query.data || '';
 
   try {
+    // листание списка групп
+    if (data.startsWith('grp:')) {
+      await api.answerCallbackQuery({ callback_query_id: query.id });
+      const [, pageRaw, ...rest] = data.split(':');
+      const page = Math.max(0, parseInt(pageRaw, 10) || 0);
+      const query = rest.join(':');
+      const groups = await getGroups();
+      const q = query.trim().toLowerCase().replace(/\s+/g, '');
+      const found = q
+        ? groups.filter(g => g.name.toLowerCase().replace(/\s+/g, '').includes(q))
+        : groups;
+      try { await api.deleteMessage({ chat_id: chatId, message_id: query.message.message_id }); } catch {}
+      return sendRich(chatId,
+        `<h4>Группы ${found.length} — выбирай:</h4>` + groupsButtonsHtml(found, { page, query: q }),
+        { noButtons: true });
+    }
+
     // выбор группы из списка
     if (data.startsWith('set:')) {
       const [, groupId, ...rest] = data.split(':');
@@ -73,6 +90,6 @@ export default async function (query) {
 async function searchGroupsList(chatId) {
   const groups = await getGroups();
   return sendRich(chatId,
-    `<h4>Выбери группу:</h4>` + groupsButtonsHtml(groups.slice(0, 30)),
+    `<h4>Выбери группу (${groups.length}):</h4>` + groupsButtonsHtml(groups, { page: 0, query: '' }),
     { noButtons: true });
 }
