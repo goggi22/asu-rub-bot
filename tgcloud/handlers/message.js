@@ -18,6 +18,7 @@ async function ensureMention() {
 
 export default async function (message) {
   if (!message.text) return;
+  const t0 = Date.now();
   const chat = message.chat;
   const chatId = chat.id;
   const isGroup = chat.type === 'group' || chat.type === 'supergroup';
@@ -29,6 +30,8 @@ export default async function (message) {
     const addressed = text.startsWith('/') || MENTION_RE.test(text) || /^расписание/i.test(text);
     if (!addressed) return;
     const cmd = text.replace(/@[\w_]+/g, '').trim().toLowerCase();
+
+    if (/^\/ping/.test(cmd)) return ping(chatId, t0);
 
     if (/^\/start|^расписание/.test(cmd) && !/сегодня|завтра|недел/.test(cmd)) {
       return api.sendMessage({
@@ -53,6 +56,8 @@ export default async function (message) {
     return toggleNotify(chatId, message.from.id, !/off|выкл/i.test(text));
   }
 
+  if (text.startsWith('/ping')) return ping(chatId, t0);
+
   if (text.startsWith('/today')) return respond(chatId, 'today');
   if (text.startsWith('/tomorrow')) return respond(chatId, 'tomorrow');
   if (text.startsWith('/week')) return respond(chatId, 'week');
@@ -68,6 +73,18 @@ export default async function (message) {
 
   // всё остальное — поиск группы
   return searchGroups(chatId, text);
+}
+
+// /ping — латентность: round-trip до Telegram API + полное время обработки
+async function ping(chatId, t0) {
+  const t1 = Date.now();
+  await api.getMe();
+  const apiMs = Date.now() - t1;
+  const totalMs = Date.now() - t0;
+  return sendRich(chatId,
+    `<h3>${neko('⚡️')} pong</h3>` +
+    `<p>api: <b>${apiMs} мс</b> · обработка: <b>${totalMs} мс</b></p>`,
+    { noButtons: true });
 }
 
 function parseWhen(cmd) {
