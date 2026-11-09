@@ -6,6 +6,7 @@ import { eq } from 'sdk/db';
 import { users } from '../schema.js';
 import { getSchedule, localDate, lessonLine, richDay, toMin } from '../lib/asu.js';
 import { scheduleButtonsHtml } from '../lib/keyboard.js';
+import { neko } from '../lib/emoji.js';
 
 const TZ = 7 * 3600 * 1000; // Рубцовск UTC+7
 const PRE_MINUTES = 10; // за сколько минут до пары предупреждать
@@ -96,7 +97,8 @@ export default async function () {
             const weather = await getWeatherLine();
             await api.sendMessage({
               chat_id: u.tgId,
-              text: `☀️ ${now.weekday}, ${today.date}. Пар нет — спи дальше!` + (weather ? `\n\n${weather}` : ''),
+              text: `${neko('😴')} ${now.weekday}, ${today.date}. Пар нет — спи дальше!` + (weather ? `\n\n${weather}` : ''),
+              parse_mode: 'HTML',
             });
             results.morning++;
           } catch (e) { console.error('morning send', u.tgId, e.message); }
