@@ -1,9 +1,10 @@
 import { api, db } from 'sdk';
 import { eq } from 'sdk/db';
 import { users } from '../schema.js';
-import { getGroups } from '../lib/asu.js';
+import { getGroups, esc } from '../lib/asu.js';
 import { groupsButtonsHtml } from '../lib/keyboard.js';
 import { sendSchedule, sendRich } from '../lib/schedule.js';
+import { neko } from '../lib/emoji.js';
 
 let BOT_USERNAME = null;
 let MENTION_RE = /^$/;
@@ -41,10 +42,10 @@ export default async function (message) {
   // ---------- личка ----------
   if (text.startsWith('/start')) {
     await sendRich(chatId,
-      `<h3>Расписание РИ (филиала) АлтГУ 💙</h3>` +
-      `<p>Напиши номер группы (например <b>1235</b>) — и я запомню её. Дальше всё кнопками прямо здесь.</p>` +
+      `<h3>Расписание РИ (филиала) АлтГУ ${neko('❤️')}</h3>` +
+      `<p>${neko('👋')} Напиши номер группы (например <b>1235</b>) — и я запомню её. Дальше всё кнопками прямо здесь.</p>` +
       `<p>Утром в 7:30 — сводка на день, за 10 минут до пары и на старте — напоминание.</p>` +
-      `<footer>данные с rb.asu.ru</footer>`);
+      `<footer>${neko('🐾')} данные с rb.asu.ru</footer>`);
     return;
   }
 
@@ -85,21 +86,22 @@ async function respond(chatId, when, isGroup = false) {
     await sendSchedule(chatId, user.groupId, when, { notifyOn: user.notify });
   } catch (e) {
     console.error(e);
-    await api.sendMessage({ chat_id: chatId, text: 'Не смог вытащить расписание с rb.asu.ru 😕 попробуй ещё раз.' });
+    await api.sendMessage({ chat_id: chatId, text: `Не смог вытащить расписание с rb.asu.ru ${neko('😥')} попробуй ещё раз.`, parse_mode: 'HTML' });
   }
 }
 
 async function toggleNotify(chatId, tgId, enable) {
   const [user] = await db.select().from(users).where(eq(users.tgId, tgId)).all();
   if (!user || !user.groupId) {
-    return api.sendMessage({ chat_id: chatId, text: 'Сначала выбери группу 🙂' });
+    return api.sendMessage({ chat_id: chatId, text: `Сначала выбери группу ${neko('😛')}`, parse_mode: 'HTML' });
   }
   await db.update(users).set({ notify: enable }).where(eq(users.tgId, tgId)).run();
   return api.sendMessage({
     chat_id: chatId,
+    parse_mode: 'HTML',
     text: enable
-      ? '🔔 Напоминания включены: утром сводка, за 10 минут до пары и в начале пары.'
-      : '🔕 Напоминания выключены.',
+      ? `${neko('⚡️')} Напоминания включены: утром сводка, за 10 минут до пары и в начале пары.`
+      : `${neko('😴')} Напоминания выключены.`,
   });
 }
 
@@ -114,7 +116,8 @@ async function searchGroups(chatId, query) {
   if (found.length === 0) {
     return api.sendMessage({
       chat_id: chatId,
-      text: `Группы «${query}» не нашёл 🤷 попробуй ещё раз, например «1235».`,
+      parse_mode: 'HTML',
+      text: `Группы «${esc(query)}» не нашёл ${neko('🥺')} попробуй ещё раз, например «1235».`,
     });
   }
   if (found.length === 1) {
