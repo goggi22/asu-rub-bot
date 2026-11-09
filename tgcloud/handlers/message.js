@@ -124,7 +124,7 @@ async function searchGroups(chatId, query) {
     return saveGroup(chatId, found[0], false);
   }
   return sendRich(chatId,
-    `<h4>Нашёл ${found.length} — выбирай:</h4>` + groupsButtonsHtml(found),
+    `<h4>Нашёл ${found.length} — выбирай:</h4>` + groupsButtonsHtml(found, { page: 0, query: q }),
     { noButtons: true });
 }
 
