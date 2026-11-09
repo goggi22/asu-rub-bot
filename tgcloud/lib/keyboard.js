@@ -16,10 +16,34 @@ export function scheduleButtonsHtml(notifyOn = true) {
   ].join('');
 }
 
-export function groupsButtonsHtml(groups) {
-  return groups.slice(0, 40)
+// список групп с пагинацией: по 10 на страницу, стрелки-навигация
+export function groupsButtonsHtml(groups, opts = {}) {
+  const pageSize = 10;
+  const page = Math.max(0, opts.page || 0);
+  const query = (opts.query || '').slice(0, 24);
+  const pages = Math.max(1, Math.ceil(groups.length / pageSize));
+  const cur = Math.min(page, pages - 1);
+  const slice = groups.slice(cur * pageSize, cur * pageSize + pageSize);
+
+  const rows = slice
     .map(g => `<tg-button-row align="center"><tg-button type="callback_data" data="set:${g.id}:${g.name}">${esc(g.name)}</tg-button></tg-button-row>`)
     .join('');
+
+  if (pages <= 1) return rows;
+
+  const nav = [
+    '<tg-button-row align="center">',
+    cur > 0
+      ? `  <tg-button type="callback_data" data="grp:${cur - 1}:${query}">${neko('🐾')} Назад</tg-button>`
+      : '  <tg-button type="disabled">·</tg-button>',
+    `  <tg-button type="disabled">${cur + 1} / ${pages}</tg-button>`,
+    cur < pages - 1
+      ? `  <tg-button type="callback_data" data="grp:${cur + 1}:${query}">Вперёд ${neko('✨')}</tg-button>`
+      : '  <tg-button type="disabled">·</tg-button>',
+    '</tg-button-row>',
+  ].join('');
+
+  return rows + nav;
 }
 
 // inline-подборка для plain-fallback
