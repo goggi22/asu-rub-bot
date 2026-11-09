@@ -9,6 +9,7 @@
 import { db, api } from 'sdk';
 import { eq } from 'sdk/db';
 import { users } from '../schema.js';
+import { neko } from '../lib/emoji.js';
 
 function fmtLesson(l) {
   let s = `${l.start}–${l.end} ${l.subject || 'Занятие'}`;
@@ -25,16 +26,16 @@ export default async function (payload) {
     if (!ch.groupId) continue;
     results.groups++;
 
-    const lines = [`⚠️ <b>Изменения в расписании — ${ch.groupName}</b>`];
+    const lines = [`${neko('‼️')} <b>Изменения в расписании — ${ch.groupName}</b>`];
     lines.push(`<b>${ch.weekday || ''}, ${ch.date}</b>\n`);
 
     if (ch.removed?.length) {
-      lines.push('❌ <b>Убраны:</b>');
+      lines.push(`${neko('❌')} <b>Убраны:</b>`);
       for (const l of ch.removed) lines.push(`   ${fmtLesson(l)}`);
     }
     if (ch.added?.length) {
       if (ch.removed?.length) lines.push('');
-      lines.push('✅ <b>Добавлены:</b>');
+      lines.push(`${neko('✅')} <b>Добавлены:</b>`);
       for (const l of ch.added) lines.push(`   ${fmtLesson(l)}`);
     }
     if (ch.changed?.length) {
