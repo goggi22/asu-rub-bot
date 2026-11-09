@@ -1,4 +1,4 @@
-// Тик для крона с vps: утренняя сводка + напоминания о парах.
+// Тик для крона с vps: утренняя сводка + напоминания о парах + погода.
 // Вызов: npx tgcloud run endpoints/tick '{}'
 
 import { db, api } from 'sdk';
@@ -9,6 +9,38 @@ import { scheduleButtonsHtml } from '../lib/keyboard.js';
 
 const TZ = 7 * 3600 * 1000; // Рубцовск UTC+7
 const PRE_MINUTES = 10; // за сколько минут до пары предупреждать
+const WEATHER_URL = 'https://api.open-meteo.com/v1/forecast?latitude=51.4989&longitude=82.2139&current=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min,weather_code,wind_speed_10m_max&timezone=Asia%2FBarnaul&forecast_days=1';
+
+// WMO-коды → описание
+const WMO = {
+  0: ['☀️', 'ясно'], 1: ['🌤', 'малооблачно'], 2: ['⛅', 'переменная облачность'], 3: ['☁️', 'пасмурно'],
+  45: ['🌫', 'туман'], 48: ['🌫', 'изморозь'],
+  51: ['🌦', 'морось'], 53: ['🌦', 'морось'], 55: ['🌧', 'сильная морось'],
+  61: ['🌦', 'небольшой дождь'], 63: ['🌧', 'дождь'], 65: ['🌧', 'сильный дождь'],
+  66: ['🌧', 'ледяной дождь'], 67: ['🌧', 'ледяной дождь'],
+  71: ['🌨', 'небольшой снег'], 73: ['❄️', 'снег'], 75: ['❄️', 'сильный снег'], 77: ['🌨', 'снежные зёрна'],
+  80: ['🌦', 'ливни'], 81: ['🌧', 'ливни'], 82: ['⛈', 'сильные ливни'],
+  85: ['🌨', 'снегопад'], 86: ['❄️', 'сильный снегопад'],
+  95: ['⛈', 'гроза'], 96: ['⛈', 'гроза с градом'], 99: ['⛈', 'гроза с градом'],
+};
+
+async function getWeatherLine() {
+  try {
+    const { fetch } = await import('sdk');
+    const r = await fetch(WEATHER_URL);
+    if (!r.ok) return '';
+    const j = await r.json();
+    const code = j.daily?.weather_code?.[0];
+    const tmin = Math.round(j.daily?.temperature_2m_min?.[0]);
+    const tmax = Math.round(j.daily?.temperature_2m_max?.[0]);
+    const wind = Math.round(j.daily?.wind_speed_10m_max?.[0]);
+    const [emoji, desc] = WMO[code] || ['🌡', ''];
+    const rng = tmin === tmax ? `${tmax}°` : `${tmin}…${tmax}°`;
+    return `${emoji} погода: ${rng}, ${desc}, ветер до ${wind} км/ч`;
+  } catch {
+    return '';
+  }
+}
 
 function nowLocal() {
   const d = new Date(Date.now() + TZ);
@@ -51,17 +83,20 @@ export default async function () {
         await db.update(users).set({ lastMorning: now.date }).where(eq(users.tgId, u.tgId)).run();
         if (lessons.length) {
           try {
+            const weather = await getWeatherLine();
+            const wHtml = weather ? `<p><small>${weather}</small></p>` : '';
             await api.sendRichMessage({
               chat_id: u.tgId,
-              rich_message: { html: richDay(today, { compact: true }) + scheduleButtonsHtml(u.notify) },
+              rich_message: { html: richDay(today, { compact: true }) + wHtml + scheduleButtonsHtml(u.notify) },
             });
             results.morning++;
           } catch (e) { console.error('morning send', u.tgId, e.message); }
         } else {
           try {
+            const weather = await getWeatherLine();
             await api.sendMessage({
               chat_id: u.tgId,
-              text: `☀️ ${now.weekday}, ${today.date}. Пар нет — спи дальше!`,
+              text: `☀️ ${now.weekday}, ${today.date}. Пар нет — спи дальше!` + (weather ? `\n\n${weather}` : ''),
             });
             results.morning++;
           } catch (e) { console.error('morning send', u.tgId, e.message); }
